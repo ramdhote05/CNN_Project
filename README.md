@@ -1,73 +1,71 @@
 # Keyboard vs Mouse Image Classification
 
-This project uses a Convolutional Neural Network (CNN) to classify images as either a keyboard or a mouse.
+This project is a simple image-classification demo that predicts whether an uploaded image looks more like a keyboard or a mouse.
 
-## Project Overview
+## Features
 
-The model is trained on a custom dataset of keyboard and mouse images and predicts the class of an input image.
+- Upload an image through a Streamlit web interface
+- Preprocess the uploaded image
+- Extract image features and classify it into a binary label
+- Show the predicted class and confidence score
+- Run in a lightweight, cloud-friendly setup without TensorFlow
+
+## Current Model Behavior
+
+The app currently classifies between two classes:
+
+- Keyboard
+- Mouse
+
+This is a lightweight demonstration project and is intended for learning and experimentation.
+
+## Limitations
+
+This project has important limitations that users should know:
+
+- It is not a general-purpose object detector
+- It is not trained to recognize ID cards, documents, or unrelated objects
+- It may give incorrect results on images with different backgrounds, lighting, resizing, or angles
+- It is trained on a limited dataset and should not be treated as a production-grade classifier
+- Predictions depend heavily on image similarity to the training examples
+
+In other words, if an uploaded image is not close to the keyboard/mouse training distribution, the model may still produce a forced guess rather than a meaningful result.
 
 ## Repository Structure
 
-- [app.py](app.py) — Streamlit web app for uploading and classifying images
-- [keyboard_vs_mouse_image_classification.py](keyboard_vs_mouse_image_classification.py) — model training and evaluation pipeline
-- [keyboard_mouse_cnn.keras](keyboard_mouse_cnn.keras) — trained Keras model
-- [combined_dataset](combined_dataset) — organized dataset used for model training
-- [Keyboard_dataset](Keyboard_dataset) — original keyboard images
-- [Mouse_dataset](Mouse_dataset) — original mouse images
-- [test_image.jpg](test_image.jpg) — sample image for testing the model
-- [requirements.txt](requirements.txt) — required Python packages
+- [app.py](app.py) — Streamlit web app for image upload and prediction
+- [keyboard_vs_mouse_image_classification.py](keyboard_vs_mouse_image_classification.py) — training pipeline and experiment code
+- [Keyboard_dataset](Keyboard_dataset) — keyboard sample images
+- [Mouse_dataset](Mouse_dataset) — mouse sample images
+- [combined_dataset](combined_dataset) — combined dataset used for model experiments
+- [requirements.txt](requirements.txt) — project dependencies
+- [runtime.txt](runtime.txt) — runtime hint for deployment environments
+- [test_image.jpg](test_image.jpg) — sample test image
 
 ## Setup
 
 1. Clone the repository
-2. Create a virtual environment (optional but recommended)
-3. Install the dependencies:
+2. Create a virtual environment if needed
+3. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Run the Web App
+## Run the App
 
 ```bash
 streamlit run app.py
 ```
 
-The app lets you upload an image and predicts whether it contains a keyboard or a mouse.
+## Deployment Notes
 
-## Dependencies
-
-The project requires libraries such as:
-
-- TensorFlow
-- NumPy
-- Pandas
-- Matplotlib
-- Seaborn
-- Scikit-learn
-- Pillow
-- Streamlit
-
-## Model Details
-
-- Input size: 128 x 128 RGB images
-- Model type: CNN built with TensorFlow/Keras
-- Classes: Keyboard, Mouse
-- Output: binary image classification
-
-## Dataset
-
-The dataset is divided into two folders:
-
-- [Keyboard_dataset](Keyboard_dataset)
-- [Mouse_dataset](Mouse_dataset)
-
-These images are combined into a single structure under [combined_dataset](combined_dataset) for training.
+This app is designed to be simple and compatible with deployment environments that do not support TensorFlow on newer Python versions. The current version uses a lightweight image feature classifier for better cloud compatibility.
 
 ## Notes
 
-This project was created for image classification experimentation and can be extended with additional classes, data augmentation, or transfer learning.
+This project is best viewed as a beginner-friendly machine learning demo. It can be expanded with more classes, a larger dataset, and a stronger CNN model for more accurate predictions.
 
 ## License
 
-This project is for educational and experimental use.
+This project is intended for educational and experimental use.
