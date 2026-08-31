@@ -1,38 +1,75 @@
+import pickle
 from pathlib import Path
 
 import numpy as np
 import streamlit as st
-import tensorflow as tf
 from PIL import Image
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR / "keyboard_mouse_cnn.keras"
-IMAGE_SIZE = (128, 128)
-CLASS_NAMES = ["Keyboard", "Mouse"]
+MODEL_PATH = BASE_DIR / "keyboard_mouse_model.pkl"
+DATASET_FOLDERS = {
+    "Keyboard": BASE_DIR / "Keyboard_dataset",
+    "Mouse": BASE_DIR / "Mouse_dataset",
+}
+TARGET_SIZE = (32, 32)
+
+
+def image_to_features(image: Image.Image):
+    image = image.convert("RGB")
+    image = image.resize(TARGET_SIZE)
+    gray = np.asarray(image, dtype=np.float32).mean(axis=2) / 255.0
+    return gray.reshape(-1)
+
+
+def list_image_files(folder: Path):
+    if not folder.exists():
+        return []
+    return sorted(
+        [p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in {".png", ".jpg", ".jpeg"}]
+    )
+
+
+def train_model():
+    X, y = [], []
+
+    for label, folder in DATASET_FOLDERS.items():
+        for image_path in list_image_files(folder):
+            img = Image.open(image_path)
+            X.append(image_to_features(img))
+            y.append(label)
+
+    if not X:
+        raise FileNotFoundError("No training images were found in Keyboard_dataset or Mouse_dataset.")
+
+    model = make_pipeline(
+        StandardScaler(),
+        LogisticRegression(max_iter=2000, random_state=42),
+    )
+    model.fit(np.vstack(X), y)
+
+    with MODEL_PATH.open("wb") as f:
+        pickle.dump(model, f)
+
+    return model
 
 
 @st.cache_resource
 def load_model():
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(f"Model file not found: {MODEL_PATH}")
-    return tf.keras.models.load_model(MODEL_PATH)
-
-
-def preprocess_image(image: Image.Image):
-    image = image.convert("RGB")
-    image = image.resize(IMAGE_SIZE)
-    image_array = np.array(image, dtype=np.float32) / 255.0
-    image_array = np.expand_dims(image_array, axis=0)
-    return image_array
+    if MODEL_PATH.exists():
+        with MODEL_PATH.open("rb") as f:
+            return pickle.load(f)
+    return train_model()
 
 
 def predict_class(model, image: Image.Image):
-    processed = preprocess_image(image)
-    prediction = model.predict(processed, verbose=0)[0][0]
-    is_mouse = prediction >= 0.5
-    predicted_label = "Mouse" if is_mouse else "Keyboard"
-    confidence = float(prediction if is_mouse else 1.0 - prediction)
-    return predicted_label, confidence
+    features = image_to_features(image)
+    prediction = model.predict([features])[0]
+    probabilities = model.predict_proba([features])[0]
+    confidence = float(np.max(probabilities))
+    return prediction, confidence
 
 
 st.set_page_config(page_title="Keyboard vs Mouse Classifier", layout="wide")
@@ -54,12 +91,8 @@ if uploaded_file is not None:
         st.subheader("Prediction")
         st.metric("Class", label)
         st.metric("Confidence", f"{confidence * 100:.2f}%")
-
-        if label == "Keyboard":
-            st.success("The model predicts this is a keyboard.")
-        else:
-            st.success("The model predicts this is a mouse.")
+        st.success(f"The model predicts this is a {label.lower()}.")
 else:
     st.info("Please upload an image to get a prediction.")
 
-st.caption("Model source: keyboard_mouse_cnn.keras")
+st.caption("Model source: keyboard_mouse_model.pkl")
